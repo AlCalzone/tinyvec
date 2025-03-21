@@ -257,6 +257,14 @@ impl<T, const N: usize> Extend<T> for TinyVec<T, N> {
     }
 }
 
+impl<T, const N: usize> FromIterator<T> for TinyVec<T, N> {
+    fn from_iter<I: IntoIterator<Item = T>>(iter: I) -> Self {
+        let mut ret = Self::new();
+        ret.extend(iter);
+        ret
+    }
+}
+
 unsafe impl<T, const N: usize> Send for TinyVec<T, N> where T: Send {}
 
 pub struct IntoIter<T, const N: usize> {
@@ -374,6 +382,24 @@ mod tests {
     #[should_panic]
     fn test_from_vec_too_large() {
         let _ = TinyVec::<u8, 3>::from(vec![1u8, 2, 3, 4]);
+    }
+
+    #[test]
+    fn test_from_iterator() {
+        let vec = TinyVec::<u8, 3>::from_iter([1u8, 2].into_iter());
+        assert_eq!(&vec[..], &[1u8, 2]);
+    }
+
+    #[test]
+    fn test_collect() {
+        let vec: TinyVec<u8, 3> = [1u8, 2].iter().copied().collect();
+        assert_eq!(&vec[..], &[1u8, 2]);
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_collect_too_large() {
+        let _: TinyVec<u8, 3> = [1u8, 2,4,5].iter().copied().collect();
     }
 
     #[test]
